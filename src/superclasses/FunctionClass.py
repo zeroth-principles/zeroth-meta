@@ -18,13 +18,13 @@
 """Superclasses for frequently used design patterns."""
 
 
-class Output_g_Input(object):
+class FunctionClass(object):
     """
     Class that behaves like functions. It is used to impose a structure on data data processing to facilitate 
     code modularity and reusability.
     """
 
-    def __init__(self, params=None, pre=None) -> None:
+    def __init__(self, params: dict = None, pre=None) -> None:
         if params is None or isinstance(params, str):
             self.params = self.std_params(params)
         elif isinstance(params, tuple):
@@ -39,18 +39,18 @@ class Output_g_Input(object):
         self.pre = pre
 
     @classmethod
-    def std_params(cls, name=None) -> dict:
+    def std_params(cls, name: str = None) -> dict:
         return dict()
 
     @classmethod
     def pkeys(cls) -> list:
         return []
 
-    def __call__(self, operand=None, period: tuple = None, params=None) -> object:
+    def __call__(self, operand=None, period: tuple = None, params: dict = None) -> object:
         results = self._run(operand, period, params)
         return results
 
-    def _run(self, operand=None, period: tuple = None, params=None) -> object:
+    def _run(self, operand=None, period: tuple = None, params: dict = None) -> object:
         params = self.params.update(params, overwrite=True, append=True)
 
         if self.pre is not None:
@@ -61,11 +61,11 @@ class Output_g_Input(object):
         results = self.wrapped_execute(operand, period, params)
         return results
 
-    def wrapped_execute(self, operand=None, period: tuple = None, params=None) -> object:
+    def wrapped_execute(self, operand=None, period: tuple = None, params: dict = None) -> object:
         results = self.execute(operand, period, params)
         return results
 
     @classmethod
     @abstractmethod
-    def execute(cls, operand=None, period: tuple = None, params=None) -> object:
+    def execute(cls, operand=None, period: tuple = None, params: dict = None) -> object:
         return operand
