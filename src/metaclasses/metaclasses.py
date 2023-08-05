@@ -20,8 +20,8 @@
 __copyright__ = '2023 Zeroth Principles Research'
 __license__ = 'GPLv3'
 __docformat__ = 'google'
-__author__ = 'Zeroth Principles Developers'
-__email__ = 'contact@zeroth-principles.com'
+__author__ = 'Zeroth Principles Engineering'
+__email__ = 'engineering@zeroth-principles.com'
 __authors__ = ['Ramanuj Lal <ramanujlal@zeroth-principles.com>']
 
 import json
