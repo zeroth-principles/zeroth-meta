@@ -27,6 +27,7 @@ __authors__ = ['Ramanuj Lal <ramanujlal@zeroth-principles.com>']
 import json
 from abc import ABC, ABCMeta, abstractmethod
 from typing import Any, Dict, Tuple, Optional
+import logging
 
 
 class IsolatedMeta(ABCMeta):
@@ -107,37 +108,43 @@ class MultitonMeta(IsolatedMeta):
         # could not not be found in the registry, create a class instance, add
         # it to the registry and return the instance.
         # TODO: Add a warning if the fingerprint is not hashable.
-        try:
-            key = (cls, args, frozenset(sorted(kwds.items())))
-            # TODO: change this to only one return per method
-            return cls._registry[key]
-        except TypeError as err:
-            if 'unhashable' in str(err):
-                register = False
+        
+        logging.info("args: %s ; kwds: %s", args, kwds)
+        if len(args) > 0:
+            key = (cls, json.dumps(args[0], sort_keys=True))
+        else:
+            if 'params' in kwds:
+                key = (cls, json.dumps(kwds['params'], sort_keys=True))
             else:
-                raise
-        except KeyError:
-            register = True
+                raise KeyError("MultitonMeta requires an argument or a 'params'")
+            
+        logging.info("Multiton checking registry for key: %s", key)
+    
+        if key in cls._registry:
+            logging.info("Multiton Found Instance of %s %s", *key)
+            obj = cls._registry[key]
+        else:
+            logging.info("Multiton No Instance of %s %s", *key)
+            
+            # Create new subclass of the given class. Set the attribute '__slots__'
+            # to an empty list, to allow the usage of slots.
+            subcls = MultitonMeta(cls.__name__, (cls, ), {'__slots__': []})
 
-        # Create new subclass of the given class. Set the attribute '__slots__'
-        # to an empty list, to allow the usage of slots.
-        subcls = MultitonMeta(cls.__name__, (cls, ), {'__slots__': []})
+            # Create an instance of the class. Note, that if the class does not
+            # implement an __init__ method a TypeError is raised. In this case the
+            # class is called without arguments.
+            try:
+                obj = super(MultitonMeta, cls).__call__(*args, **kwds)
+            except TypeError as err:
+                if 'takes no arguments' in str(err):
+                    obj = super(MultitonMeta, cls).__call__()
+                else:
+                    raise
 
-        # Create an instance of the class. Note, that if the class does not
-        # implement an __init__ method a TypeError is raised. In this case the
-        # class is called without arguments.
-        try:
-            obj = super(MultitonMeta, cls).__call__(*args, **kwds)
-        except TypeError as err:
-            if 'takes no arguments' in str(err):
-                obj = super(MultitonMeta, cls).__call__()
-            else:
-                raise
-
-        # If the fingerprint is hashable, add the instance to the registry and
-        # finally return it.
-        if register:
+            # Add the instance to the registry.
+            logging.info("Multiton Registering Instance of %s %s", *key)
             cls._registry[key] = obj
+            
         return obj
 
 
