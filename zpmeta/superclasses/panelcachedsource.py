@@ -17,6 +17,7 @@
 #
 """Superclasses for frequently used design patterns."""
 
+import logging
 import itertools
 from abc import abstractmethod, ABCMeta
 from pandas import DataFrame, Series, concat, MultiIndex
@@ -53,10 +54,10 @@ class PanelCachedSource(object):
 
     # @DataLogHandler().log_level()
     def _run(self, entities: dict = None, period: tuple = None) -> DataFrame:
-        print("RUN " + str(self))
+        logging.info("RUN " + str(self))
 
         if self.value is None:
-            print("RUN INITIAL: ", entities, period)
+            logging.info("RUN INITIAL: [%s] %s - %s", entities, *period)
             value = self.wrapped_execute("INITIAL", entities, period)
             self.update(ts=value)
             self.entities, self.period = entities, period
@@ -64,13 +65,18 @@ class PanelCachedSource(object):
             appendable_xs, appendable_ts = self.appendable['xs'], self.appendable['ts']
             incremental_period, total_period = self.mismatch_period(period)
             incremental_items, decremental_items, total_items  = self.mismatch_entities(entities)
-            print("RUN Nth: ", entities, period)
-            print("INCREMENTAL Items: ", incremental_items)
-            print("TOTAL Items: ", total_items)
-            print("DECREMENTAL Items: ", decremental_items)
-            print("INCREMENTAL Period: ", incremental_period)
-            print("TOTAL Period: ", total_period)
-            print("APPENDABLE XS:%s TS:%s" % (appendable_xs, appendable_ts))
+            
+            period_log, incremental_period_log, total_period_log = list(map(lambda x: x if x is not None 
+                                                else (None,None), (period, incremental_period, total_period)))
+            print(period_log)
+            print(entities)
+            logging.info("RUN Nth: %s %s - %s", entities, *period_log)
+            logging.info("INCREMENTAL Items: %s" %incremental_items)
+            logging.info("TOTAL Items: %s" %total_items)
+            logging.info("DECREMENTAL Items: %s" %decremental_items)
+            logging.info("INCREMENTAL Period: %s - %s", *incremental_period_log)
+            logging.info("TOTAL Period: %s - %s", *total_period_log)
+            logging.info("APPENDABLE XS:%s TS:%s" %(appendable_xs, appendable_ts))
             
             if appendable_xs and appendable_ts:
                 if incremental_items is not None:
@@ -98,12 +104,13 @@ class PanelCachedSource(object):
         # TODO: Implement this
         # requested_value = self.subset(entities=entities, period=period)
         requested_value = self.value.copy()
-        print("DONE " + str(self))
+        logging.info("DONE " + str(self))
         return requested_value
 
     def wrapped_execute(self, call_type=None, entities=None, period=None) -> DataFrame:
-        # with DataLogHandler().log_level():
-        print("EXEC %s: [%s] %s" %(call_type, entities, period))
+        # with DataLogHandler().log_level()
+        period_log = period if period is not None else (None, None)
+        logging.info("EXEC %s: [%s] %s - %s" %(call_type, str(entities), *period_log))
         results = self.execute(call_type=call_type, entities=entities, period=period)
         return results
 
