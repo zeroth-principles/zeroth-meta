@@ -17,6 +17,8 @@
 #
 """Superclasses for frequently used design patterns."""
 
+from abc import abstractmethod
+
 
 class FunctionClass(object):
     """
@@ -65,7 +67,8 @@ class FunctionClass(object):
         results = self.execute(operand, period, params)
         return results
 
-    @classmethod
     @abstractmethod
+    @classmethod
     def execute(cls, operand=None, period: tuple = None, params: dict = None) -> object:
         return operand
+
