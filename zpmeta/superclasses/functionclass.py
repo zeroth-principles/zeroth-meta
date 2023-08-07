@@ -16,9 +16,7 @@
 #  Zeroth-Meta. If not, see <http://www.gnu.org/licenses/>.
 #
 """Superclasses for frequently used design patterns."""
-
-from abc import abstractmethod
-
+import logging
 
 class FunctionClass(object):
     """
@@ -26,22 +24,24 @@ class FunctionClass(object):
     code modularity and reusability.
     """
 
-    def __init__(self, params: dict = None, pre=None) -> None:
+    def __init__(self, params=None, pre=None) -> None:
         if params is None or isinstance(params, str):
-            self.params = self.std_params(params)
+            self.params = self._std_params(params)
         elif isinstance(params, tuple):
-            base_params = self.std_params(params[0])
-            self.params = base_params.update(params[1], overwrite=True, append=True)
+            self.params = self._std_params(params[0])
+            self.params.update(params[1])
         elif isinstance(params, dict):
-            base_params = self.std_params()
-            self.params = base_params.update(params, overwrite=True, append=True)
+            self.params = self._std_params()
+            self.params.update(params)
         else:
             raise TypeError("params must be a str, tuple, or a dict!")
+        
+        logging.info("INIT %s %s", self.__class__.__name__, self.params)
 
         self.pre = pre
 
     @classmethod
-    def std_params(cls, name: str = None) -> dict:
+    def _std_params(cls, name=None) -> dict:
         return dict()
 
     @classmethod
@@ -53,21 +53,25 @@ class FunctionClass(object):
         return results
 
     def _run(self, operand=None, period: tuple = None, params: dict = None) -> object:
-        params = self.params.update(params, overwrite=True, append=True)
+        if params is not None:
+            params = (lambda d: d.update(params) or d)(self.params.copy())
+        else:
+            params = self.params
 
         if self.pre is not None:
             if isinstance(self.pre, type):
                 operand = self.pre()(operand, period, params)
             else:
                 operand = self.pre(operand, period)
+        
         results = self.wrapped_execute(operand, period, params)
+        
         return results
 
     def wrapped_execute(self, operand=None, period: tuple = None, params: dict = None) -> object:
         results = self.execute(operand, period, params)
         return results
 
-    @abstractmethod
     @classmethod
     def execute(cls, operand=None, period: tuple = None, params: dict = None) -> object:
         return operand

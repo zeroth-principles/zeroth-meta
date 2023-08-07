@@ -68,8 +68,6 @@ class PanelCachedSource(object):
             
             period_log, incremental_period_log, total_period_log = list(map(lambda x: x if x is not None 
                                                 else (None,None), (period, incremental_period, total_period)))
-            print(period_log)
-            print(entities)
             logging.info("RUN Nth: %s %s - %s", entities, *period_log)
             logging.info("INCREMENTAL Items: %s" %incremental_items)
             logging.info("TOTAL Items: %s" %total_items)
