@@ -17,6 +17,7 @@
 #
 """Superclasses for frequently used design patterns."""
 import logging
+from zputils.dict import deep_update
 
 class FunctionClass(object):
     """
@@ -51,10 +52,10 @@ class FunctionClass(object):
     def __call__(self, operand=None, period: tuple = None, params: dict = None) -> object:
         results = self._run(operand, period, params)
         return results
-
+    
     def _run(self, operand=None, period: tuple = None, params: dict = None) -> object:
         if params is not None:
-            params = (lambda d: d.update(params) or d)(self.params.copy())
+            params = deep_update(params, self.params)
         else:
             params = self.params
 
