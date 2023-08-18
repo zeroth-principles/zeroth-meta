@@ -98,7 +98,7 @@ class MultitonMeta(IsolatedMeta):
     objects).
 
     """
-    _registry: Dict[Tuple[type, tuple, Any], object] = {}
+    _registry: Dict[Tuple[type, Any], object] = {}
 
     def __call__(cls, *args: Any, **kwds: Any) -> object:
         # Create 'fingerprint' of instance. Beware: The fingerprint is only 
