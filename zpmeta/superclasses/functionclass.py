@@ -49,10 +49,10 @@ class FunctionClass(object):
         return []
 
     def __call__(self, operand=None, period: tuple = None, params: dict = None) -> object:
-        results = self.run(operand, period, params)
+        results = self._run(operand, period, params)
         return results
 
-    def run(self, operand=None, period: tuple = None, params: dict = None) -> object:
+    def _run(self, operand=None, period: tuple = None, params: dict = None) -> object:
         if params is not None:
             params = (lambda d: d.update(params) or d)(self.params.copy())
         else:

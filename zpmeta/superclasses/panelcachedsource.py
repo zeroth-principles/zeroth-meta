@@ -47,13 +47,13 @@ class PanelCachedSource(object):
         return super(PanelCachedSource, self).__repr__() + str(self.params)
 
     def __call__(self, entities=None, period: tuple = None):
-        return self.run(entities, period)
+        return self._run(entities, period)
 
     def __str__(self):
         return "%s %s" %(self.__class__.__name__, self.params)
 
     # @DataLogHandler().log_level()
-    def run(self, entities: dict = None, period: tuple = None) -> DataFrame:
+    def _run(self, entities: dict = None, period: tuple = None) -> DataFrame:
         logging.info("RUN " + str(self))
 
         if self.value is None:
