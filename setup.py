@@ -20,7 +20,7 @@ import os
 
 setup(
     name="zeroth-meta",
-    version="1.0.0",
+    version="1.0.0.101",
     description="Base Repo",
     author = "Zeroth-Principles",
     author_email = "engineering@zeroth-principles.com",

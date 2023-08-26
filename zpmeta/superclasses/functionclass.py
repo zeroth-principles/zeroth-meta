@@ -17,7 +17,7 @@
 #
 """Superclasses for frequently used design patterns."""
 import logging
-from zputils.dict import deep_update
+from zpmeta.utils.common_utils import deep_update
 
 class FunctionClass(object):
     """

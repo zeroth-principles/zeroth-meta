@@ -28,7 +28,7 @@ import json
 from abc import ABC, ABCMeta, abstractmethod
 from typing import Any, Dict, Tuple, Optional
 import logging
-
+from zpmeta.utils.common_utils import custom_serializer
 
 class IsolatedMeta(ABCMeta):
     """Metaclass for isolated classes.
@@ -53,18 +53,6 @@ class IsolatedMeta(ABCMeta):
             if 'takes no arguments' in str(err):
                 return super(IsolatedMeta, subcls).__call__()
             raise
-
-    @classmethod
-    def custom_serializer(cls, obj):
-        """Custom JSON serializer that converts built-in functions to strings."""
-        if callable(obj):
-            return str(obj)
-        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-    
-    @classmethod
-    def json_dump(cls, data, **kwargs):
-        """Modified json.dumps function to handle built-in functions."""
-        return json.dumps(data, default= cls.custom_serializer, **kwargs)   
 
 
 class SingletonMeta(IsolatedMeta):
@@ -123,10 +111,10 @@ class MultitonMeta(IsolatedMeta):
         
         logging.info("args: %s ; kwds: %s", args, kwds)
         if len(args) > 0:
-            key = (cls, cls.json_dump(args[0], sort_keys=True))
+            key = (cls, json.dumps(args[0], default= custom_serializer, sort_keys=True)   )
         else:
             if 'params' in kwds:
-                key = (cls, cls.json_dump(kwds['params'], sort_keys=True))
+                key = (cls, json.dumps(kwds['params'], default= custom_serializer, sort_keys=True))
             else:
                 raise KeyError("MultitonMeta requires an argument or a 'params'")
             
