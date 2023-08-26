@@ -64,15 +64,15 @@ class FunctionClass(object):
             else:
                 operand = self.pre(operand, period)
         
-        results = self.wrapped_execute(operand, period, params)
+        results = self._wrapped_execute(operand, period, params)
         
         return results
 
-    def wrapped_execute(self, operand=None, period: tuple = None, params: dict = None) -> object:
-        results = self.execute(operand, period, params)
+    def _wrapped_execute(self, operand=None, period: tuple = None, params: dict = None) -> object:
+        results = self._execute(operand, period, params)
         return results
 
     @classmethod
-    def execute(cls, operand=None, period: tuple = None, params: dict = None) -> object:
+    def _execute(cls, operand=None, period: tuple = None, params: dict = None) -> object:
         return operand
 

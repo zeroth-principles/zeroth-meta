@@ -58,7 +58,7 @@ class PanelCachedSource(object):
 
         if self.value is None:
             logging.info("RUN INITIAL: [%s] %s - %s", entities, *period)
-            value = self.wrapped_execute("INITIAL", entities, period)
+            value = self._wrapped_execute("INITIAL", entities, period)
             self.update(ts=value)
             self.entities, self.period = entities, period
         else:
@@ -78,25 +78,25 @@ class PanelCachedSource(object):
             
             if appendable_xs and appendable_ts:
                 if incremental_items is not None:
-                    xs_data = self.wrapped_execute("INCREMENTAL XS1", incremental_items, self.period)
+                    xs_data = self._wrapped_execute("INCREMENTAL XS1", incremental_items, self.period)
                     self.entities = total_items
                     self.update(xs = xs_data)
                 if incremental_period is not None:
-                    ts_data = self.wrapped_execute("INCREMENTAL TS1", self.entities, incremental_period)
+                    ts_data = self._wrapped_execute("INCREMENTAL TS1", self.entities, incremental_period)
                     self.period = total_period
                     self.update(ts = ts_data)
             elif appendable_xs and not appendable_ts:
                 if period == total_period and incremental_items is not None:
-                    xs_data = self.wrapped_execute("INCREMENTAL XS2", incremental_items, self.period)
+                    xs_data = self._wrapped_execute("INCREMENTAL XS2", incremental_items, self.period)
                     self.entities = total_items
                     self.update(xs = xs_data)
             elif appendable_ts and not appendable_xs:
                 if incremental_items is None and decremental_items is None and incremental_period is not None:
-                    ts_data = self.wrapped_execute("INCREMENTAL TS2", self.entities, incremental_period)
+                    ts_data = self._wrapped_execute("INCREMENTAL TS2", self.entities, incremental_period)
                     self.period = total_period
                     self.update(ts = ts_data)
             else:
-                self.value = self.wrapped_execute("TOTAL", total_items, total_period)
+                self.value = self._wrapped_execute("TOTAL", total_items, total_period)
                 self.entities, self.period = total_items, total_period
 
         # TODO: Implement this
@@ -105,15 +105,15 @@ class PanelCachedSource(object):
         logging.info("DONE " + str(self))
         return requested_value
 
-    def wrapped_execute(self, call_type=None, entities=None, period=None) -> DataFrame:
+    def _wrapped_execute(self, call_type=None, entities=None, period=None) -> DataFrame:
         # with DataLogHandler().log_level()
         period_log = period if period is not None else (None, None)
         logging.info("EXEC %s: [%s] %s - %s" %(call_type, str(entities), *period_log))
-        results = self.execute(call_type=call_type, entities=entities, period=period)
+        results = self._execute(call_type=call_type, entities=entities, period=period)
         return results
 
     @abstractmethod
-    def execute(self, call_type=None, entities=None, period=None) -> DataFrame:
+    def _execute(self, call_type=None, entities=None, period=None) -> DataFrame:
         pass
 
     # TODO: Convert this method to a FunctionClass
