@@ -56,8 +56,9 @@ class PanelCachedSource(object):
     def _run(self, entities: dict = None, period: tuple = None) -> DataFrame:
         logging.info("RUN " + str(self))
 
+        period_log = (None,None) if period is None else period
         if self.value is None:
-            logging.info("RUN INITIAL: [%s] %s - %s", entities, *period)
+            logging.info("RUN INITIAL: [%s] %s - %s", entities, *period_log)
             value = self._wrapped_execute("INITIAL", entities, period)
             self.update(ts=value)
             self.entities, self.period = entities, period
@@ -66,8 +67,8 @@ class PanelCachedSource(object):
             incremental_period, total_period = self.mismatch_period(period)
             incremental_items, decremental_items, total_items  = self.mismatch_entities(entities)
             
-            period_log, incremental_period_log, total_period_log = list(map(lambda x: x if x is not None 
-                                                else (None,None), (period, incremental_period, total_period)))
+            incremental_period_log, total_period_log = list(map(lambda x: x if x is not None 
+                                                else (None,None), (incremental_period, total_period)))
             logging.info("RUN Nth: %s %s - %s", entities, *period_log)
             logging.info("INCREMENTAL Items: %s" %incremental_items)
             logging.info("TOTAL Items: %s" %total_items)
