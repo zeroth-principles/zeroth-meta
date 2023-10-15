@@ -22,7 +22,7 @@ setup(
     name="zeroth-meta",
     version="1.0.0.101",
     description="Base Repo",
-    author = "Zeroth-Principles",
+    author = "Zeroth-Principles-Engineering",
     author_email = "engineering@zeroth-principles.com",
     license="GPLv3",
     url="https://zeroth-principles.com",
