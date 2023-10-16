@@ -82,7 +82,7 @@ class MapOperands:
         return results
 
 
-class FuFy:
+class Funcify:
     def __init__(self, target_callable, operand_key, default_params=None) -> None:
         self.target_callable = target_callable
         self.operand_key = operand_key
