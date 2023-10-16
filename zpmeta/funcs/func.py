@@ -25,10 +25,11 @@ __author__ = 'Zeroth Principles Engineering'
 __email__ = 'engineering@zeroth-principles.com'
 
 import logging
+import abc
 from zpmeta.utils.common_utils import deep_update
 
 
-class Func:
+class Func(metaclass=abc.ABCMeta):
     """Callable class  used to impose a structure on data processing
 
     Raises:
@@ -38,7 +39,7 @@ class Func:
         results: Results of the function
     """    
 
-    def __init__(self, params=None, xfunc=None) -> None:
+    def __init__(self, params: dict = None, xfunc=None) -> None:
         if params is None or isinstance(params, str):
             self.params = self._std_params(params)
         elif isinstance(params, tuple):
@@ -71,6 +72,7 @@ class Func:
         return results
 
     @classmethod
+    @abc.abstractmethod
     def _execute(cls, operand=None, params: dict = None) -> object:
         pass
 
