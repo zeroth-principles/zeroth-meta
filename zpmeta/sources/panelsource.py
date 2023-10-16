@@ -116,7 +116,7 @@ class PanelSource:
     def _execute(self, call_type=None, entities=None, period=None) -> DataFrame:
         pass
 
-    #TODO: Convert this method to a Fu
+    # TODO: Convert this method to a Fu
     def mismatch_period(self, period: tuple) -> tuple:
         if period is None:
             incremental, total = None, self.period
@@ -139,7 +139,7 @@ class PanelSource:
 
         return incremental, total
 
-    #TODO: Convert this method to a Fu
+    # TODO: Convert this method to a Func
     def mismatch_entities(self, entities: dict) -> tuple:
         if self.entities is None:
             incremental_entities, total_entities = entities, entities
