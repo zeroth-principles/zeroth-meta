@@ -11,15 +11,17 @@ __authors__ = ['Deepak Singh <deepaksingh@zeroth-principles.com>']
 import pandas as pd
 import numpy as np
 import json
+from copy import deepcopy
 
 def deep_update(d, u):
     """Deep update of dict d with dict u."""
+    d_copy = deepcopy(d)
     for k, v in u.items():
         if isinstance(v, dict):
-            d[k] = deep_update(d.get(k, {}), v)
+            d_copy[k] = deep_update(d_copy.get(k, {}), v)
         else:
-            d[k] = v
-    return d
+            d_copy[k] = v
+    return d_copy
 
 def custom_serializer(obj):
     """Custom JSON serializer that converts built-in functions to strings."""
