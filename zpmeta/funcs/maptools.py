@@ -35,7 +35,7 @@ class MapFuncs:
 
     def __call__(self, operand=None, params: dict = None) -> object:
         if params is not None:
-            params = deep_update(params, self.params)
+            params = deep_update(self.params, params)
         else:
             params = self.params.copy()
 
@@ -53,7 +53,7 @@ class MapParams:
 
     def __call__(self, operand=None, params: dict = None) -> object:
         if params is not None:
-            params = deep_update(params, self.params)
+            params = deep_update(self.params, params)
         else:
             params = self.params.copy()
 
@@ -71,7 +71,7 @@ class MapOperands:
 
     def __call__(self, operand=None, params: dict = None) -> object:
         if params is not None:
-            params = deep_update(params, self.params)
+            params = deep_update(self.params, params)
         else:
             params = self.params.copy()
 
@@ -90,7 +90,7 @@ class Funcify:
 
     def __call__(self, operand=None, params: dict = None) -> object:
         if params is not None:
-            params = deep_update(params, self.default_params)
+            params = deep_update(self.default_params, params)
         else:
             params = self.default_params.copy()
         

@@ -61,15 +61,20 @@ class Func(metaclass=abc.ABCMeta):
 
     def __call__(self, operand=None, params: dict = None) -> object:
         if params is not None:
-            params = deep_update(params, self.params)
+            params = deep_update(self.params, params)
         else:
             params = self.params
         
         if callable(self.xfunc):
             operand = self.xfunc(operand)
-            
+        
+        self._check_consistency(operand, params)
         results = self._execute(operand, params)        
         return results
+
+    @staticmethod
+    def _check_consistency(operand=None, params: dict = None) -> object:
+        pass
 
     @classmethod
     @abc.abstractmethod
