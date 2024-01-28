@@ -44,10 +44,10 @@ class Func(metaclass=abc.ABCMeta):
             self.params = self._std_params(params)
         elif isinstance(params, tuple):
             self.params = self._std_params(params[0])
-            self.params.update(params[1])
+            self.params = deep_update(self.params, params)
         elif isinstance(params, dict):
             self.params = self._std_params()
-            self.params.update(params)
+            self.params = deep_update(self.params, params)
         else:
             raise TypeError("params must be a str, tuple, or a dict!")
         
@@ -68,12 +68,11 @@ class Func(metaclass=abc.ABCMeta):
         if callable(self.xfunc):
             operand = self.xfunc(operand)
         
-        self._check_consistency(operand, params)
         results = self._execute(operand, params)        
         return results
 
     @staticmethod
-    def _check_consistency(operand=None, params: dict = None) -> object:
+    def check_consistency(operand=None, params: dict = None) -> object:
         pass
 
     @classmethod

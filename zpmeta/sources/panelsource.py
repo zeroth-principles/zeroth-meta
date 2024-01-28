@@ -54,7 +54,6 @@ class PanelSource:
     # @DataLogHandler().log_level()
     def _run(self, entities: dict = None, period: tuple = None) -> DataFrame:
         logging.info("RUN " + str(self))
-        self._check_consistency(params=self.params)
         period_log = (None,None) if period is None else period
         if self.value is None:
             logging.info("RUN INITIAL: [%s] %s - %s", entities, *period_log)
@@ -200,5 +199,5 @@ class PanelSource:
         self.value = None
 
     @staticmethod
-    def _check_consistency(params: dict = None) -> object:
+    def check_consistency(params: dict = None) -> object:
         pass
