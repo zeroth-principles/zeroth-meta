@@ -21,6 +21,7 @@ import logging
 import itertools
 from abc import abstractmethod, ABCMeta
 from pandas import DataFrame, Series, concat, MultiIndex
+from zpmeta.utils.common_utils import deep_update
 
 
 class PanelSource:
@@ -34,10 +35,16 @@ class PanelSource:
     ----
     TODO: Add logging
     """
-    def __init__(self, params: dict = None):
+    _appendable = dict(xs=False, ts=True)
+
+    def __init__(self, params: dict = None, caching: dict = None):
         super(PanelSource, self).__init__()
         self.params = params
-        self.appendable = dict(xs=False, ts=False)
+
+        self.caching = dict(ts_anchor='call', ts_refresh=0, entity_levels=None)
+        if caching is not None:
+            self.caching = deep_update(self.caching, caching)
+
         self.value = None
         self.entities, self.period = None, None
         # self.logger = DataLogHandler()
@@ -62,35 +69,36 @@ class PanelSource:
             self.update(ts=value)
             self.entities, self.period = entities, period
         else:
-            appendable_xs, appendable_ts = self.appendable['xs'], self.appendable['ts']
+            appendable_xs, appendable_ts = self._appendable['xs'], self._appendable['ts']
             incremental_period, total_period = self.mismatch_period(period)
-            incremental_items, decremental_items, total_items  = self.mismatch_entities(entities)
+            incremental_items, decremental_items, total_items = self.mismatch_entities(entities)
             
             incremental_period_log, total_period_log = list(map(lambda x: x if x is not None 
                                                 else (None,None), (incremental_period, total_period)))
             logging.info("RUN Nth: %s %s - %s", entities, *period_log)
-            logging.info("INCREMENTAL Items: %s" %incremental_items)
-            logging.info("TOTAL Items: %s" %total_items)
-            logging.info("DECREMENTAL Items: %s" %decremental_items)
+            logging.info("INCREMENTAL Items: %s" % incremental_items)
+            logging.info("TOTAL Items: %s" % total_items)
+            logging.info("DECREMENTAL Items: %s" % decremental_items)
             logging.info("INCREMENTAL Period: %s - %s", *incremental_period_log)
             logging.info("TOTAL Period: %s - %s", *total_period_log)
-            logging.info("APPENDABLE XS:%s TS:%s" %(appendable_xs, appendable_ts))
+            logging.info("APPENDABLE XS:%s TS:%s" % (appendable_xs, appendable_ts))
             
             if appendable_xs and appendable_ts:
                 if incremental_items is not None:
                     xs_data = self._wrapped_execute("INCREMENTAL XS1", incremental_items, self.period)
                     self.entities = total_items
-                    self.update(xs = xs_data)
+                    self.update(xs=xs_data)
                 if incremental_period is not None:
                     ts_data = self._wrapped_execute("INCREMENTAL TS1", self.entities, incremental_period)
                     self.period = total_period
-                    self.update(ts = ts_data)
+                    self.update(ts=ts_data)
             elif appendable_xs and not appendable_ts:
                 if period == total_period and incremental_items is not None:
                     xs_data = self._wrapped_execute("INCREMENTAL XS2", incremental_items, self.period)
                     self.entities = total_items
-                    self.update(xs = xs_data)
+                    self.update(xs=xs_data)
             elif appendable_ts and not appendable_xs:
+                # TODO: This logic needs refinement
                 if incremental_items is None and decremental_items is None and incremental_period is not None:
                     ts_data = self._wrapped_execute("INCREMENTAL TS2", self.entities, incremental_period)
                     self.period = total_period
@@ -99,9 +107,23 @@ class PanelSource:
                 self.value = self._wrapped_execute("TOTAL", total_items, total_period)
                 self.entities, self.period = total_items, total_period
 
+        if self.caching['ts_anchor'] == 'cache':
+            if len(self.value) > 0:
+                try:
+                    self.period = (self.period[0], self.value.index[-self.caching['ts_refresh'] - 1])
+                except IndexError:
+                    self.period = (self.period[0], self.period[0])
+            else:
+                logging.info("Resetting the PanelSource as the cache is empty and ts_anchor is 'cache'")
+                self.reset()
+
         # TODO: Implement this
         # requested_value = self.subset(entities=entities, period=period)
-        requested_value = self.value.copy()
+        if self.value is None:
+            requested_value = None
+        else:
+            requested_value = self.value.copy()
+
         logging.info("DONE " + str(self))
         return requested_value
 
@@ -113,10 +135,10 @@ class PanelSource:
         return results
 
     @abstractmethod
-    def _execute(self, call_type=None, entities=None, period=None) -> DataFrame:
+    def _execute(self, entities=None, period=None) -> DataFrame:
         pass
 
-    # TODO: Convert this method to a Fu
+    # TODO: Convert this method to a Func
     def mismatch_period(self, period: tuple) -> tuple:
         if period is None:
             incremental, total = None, self.period
@@ -144,28 +166,32 @@ class PanelSource:
         if self.entities is None:
             incremental_entities, total_entities = entities, entities
         else:
-            initial = [dict(zip(self.entities, x)) for x in itertools.product(*self.entities.values())]
-            new = [dict(zip(entities, x)) for x in itertools.product(*entities.values())]
-            
-            total_entities = dict()
-            for level in self.entities.keys():
-                s1, s2 = set(self.entities[level]), set(entities[level])
-                total_entities[level] = list(s1.union(s2))
-            total = [dict(zip(total_entities, x)) for x in itertools.product(*total_entities.values())]
-            
-            incremental = list(filter(lambda x: x not in initial, total))
-            if len(incremental) > 0:
-                incremental_entities = dict()
+            if self.caching['entity_levels'] is None:
+                initial = [dict(zip(self.entities, x)) for x in itertools.product(*self.entities.values())]
+                new = [dict(zip(entities, x)) for x in itertools.product(*entities.values())]
+
+                total_entities = dict()
                 for level in self.entities.keys():
-                    incremental_entities[level] = list(set(map(lambda x: x[level], incremental)))
-            else:
-                incremental_entities = None
-                
-            decremental = list(filter(lambda x: x not in new, total))
-            if len(decremental) > 0:
-                decremental_entities = dict()
-            else:
-                decremental_entities = None
+                    s1, s2 = set(self.entities[level]), set(entities[level])
+                    total_entities[level] = list(s1.union(s2))
+                total = [dict(zip(total_entities, x)) for x in itertools.product(*total_entities.values())]
+
+                incremental = list(filter(lambda x: x not in initial, total))
+                if len(incremental) > 0:
+                    incremental_entities = dict()
+                    for level in self.entities.keys():
+                        incremental_entities[level] = list(set(map(lambda x: x[level], incremental)))
+                else:
+                    incremental_entities = None
+
+                decremental = list(filter(lambda x: x not in new, total))
+                if len(decremental) > 0:
+                    decremental_entities = dict()
+                else:
+                    decremental_entities = None
+            elif isinstance(self.caching['entity_levels'], list):
+                incremental_entities, decremental_entities, total_entities = None, None, None
+                # for level in self.caching['entity_levels']:
 
         return incremental_entities, decremental_entities, total_entities
 
@@ -176,26 +202,38 @@ class PanelSource:
             elif xs is not None:
                 self.value = xs
         else:
+            refresh = self.caching['ts_anchor'] == 'cache'
             if ts is not None:
-                self.value = self.value.combine_first(ts)
+                if refresh:
+                    self.value = self.value.combine_first(ts)
+                else:
+                    self.value = self.value.update(ts, overwrite=True)
             if xs is not None:
-                self.value = self.value.combine_first(xs)
+                if refresh:
+                    self.value = self.value.combine_first(xs)
+                else:
+                    self.value = self.value.update(xs, overwrite=True)
         
     # TODO: Convert this to a Func
     def subset(self, entities: dict = None, period: tuple = None) -> DataFrame:
         data = None
         if self.value is not None:
-            data = self.value.copy()
             if period is not None:
-                data = data.truncate(before=period[0], after=period[1])
+                data = self.value.truncate(before=period[0], after=period[1])
             if entities is not None:
                 # TODO: Create a Func to subset a MultiIndex DataFrame that takes a dict of levels and values
                 #   values and returns a subset of the DataFrame
-                data = data.subset(entities)
+                if data is None:
+                    data = self.value.copy()
+                else:
+                    data = data.subset(entities)
             
         return data
 
     def reset(self) -> None:
         self.entities, self.period = None, None
         self.value = None
+
+    def entities_from_list(self, entities: list) -> dict:
+        return dict(zip(self.entities.keys(), entities))
 

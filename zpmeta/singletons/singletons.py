@@ -111,13 +111,10 @@ class MultitonMeta(IsolatedMeta):
         
         logging.info("args: %s ; kwds: %s", args, kwds)
         if len(args) > 0:
-            key = (cls, json.dumps(args[0], default= custom_serializer, sort_keys=True)   )
+            key = (cls, json.dumps(args, default=custom_serializer, sort_keys=True))
         else:
-            if 'params' in kwds:
-                key = (cls, json.dumps(kwds['params'], default= custom_serializer, sort_keys=True))
-            else:
-                raise KeyError("MultitonMeta requires an argument or a 'params'")
-            
+            key = (cls, json.dumps(kwds, default=custom_serializer, sort_keys=True))
+
         logging.info("Multiton checking registry for key: %s", key)
     
         if key in cls._registry:
