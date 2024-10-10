@@ -33,7 +33,6 @@ class PanelSource:
     ----
     [01 Jul 2023] Created
     ----
-    TODO: Add logging
     """
     _appendable = dict(xs=False, ts=True)
 

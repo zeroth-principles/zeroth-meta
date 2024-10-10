@@ -29,11 +29,11 @@ from zpmeta.utils.common_utils import deep_update
 
 
 class MapFuncs:
-    def __init__(self, func, params=None) -> None:
-        self.func = func
+    def __init__(self, func_dict, params=None):
+        self.func = func_dict
         self.params = params
 
-    def __call__(self, operand=None, params: dict = None) -> object:
+    def __call__(self, operand=None, params: dict = None) -> dict:
         if params is not None:
             params = deep_update(params, self.params)
         else:
@@ -47,11 +47,11 @@ class MapFuncs:
 
 
 class MapParams:
-    def __init__(self, func, params=None) -> None:
+    def __init__(self, func, params=None):
         self.func = func
         self.params = params
 
-    def __call__(self, operand=None, params: dict = None) -> object:
+    def __call__(self, operand=None, params: dict = None) -> dict:
         if params is not None:
             params = deep_update(params, self.params)
         else:
@@ -65,11 +65,11 @@ class MapParams:
 
 
 class MapOperands:
-    def __init__(self, func, params=None) -> None:
+    def __init__(self, func, params=None):
         self.func = func
         self.params = params
 
-    def __call__(self, operand=None, params: dict = None) -> object:
+    def __call__(self, operand=None, params: dict = None) -> dict:
         if params is not None:
             params = deep_update(params, self.params)
         else:

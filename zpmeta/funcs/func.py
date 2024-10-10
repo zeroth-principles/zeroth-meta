@@ -27,7 +27,7 @@ __email__ = 'engineering@zeroth-principles.com'
 import logging
 import abc
 from zpmeta.utils.common_utils import deep_update
-
+from copy import deepcopy
 
 class Func(metaclass=abc.ABCMeta):
     """Callable class  used to impose a structure on data processing
@@ -39,7 +39,7 @@ class Func(metaclass=abc.ABCMeta):
         results: Results of the function
     """    
 
-    def __init__(self, params: dict = None, xfunc=None) -> None:
+    def __init__(self, params: dict = None, meta=None) -> None:
         if params is None or isinstance(params, str):
             self.params = self._std_params(params)
         elif isinstance(params, tuple):
@@ -50,29 +50,35 @@ class Func(metaclass=abc.ABCMeta):
             self.params.update(params)
         else:
             raise TypeError("params must be a str, tuple, or a dict!")
-        
+
+        self._results = {}
+
         logging.info("INIT %s %s", self.__class__.__name__, self.params)
 
-        self.xfunc = xfunc
+        self.meta = meta
 
     @classmethod
     def _std_params(cls, name: str = None) -> dict:
         return {}
 
     def __call__(self, operand=None, params: dict = None) -> object:
+        params2 = deepcopy(self.params)
         if params is not None:
-            params = deep_update(params, self.params)
-        else:
-            params = self.params
-        
-        if callable(self.xfunc):
-            operand = self.xfunc(operand)
+            params2 = deep_update(params2, params)
             
-        results = self._execute(operand, params)        
+        results = self._execute(operand, params2)
+
+        return results
+
+    def _wrapped_execute(self, operand=None, params: dict = None) -> object:
+        results = self._execute(operand, params)
+        self._results = results
         return results
 
     @classmethod
     @abc.abstractmethod
     def _execute(cls, operand=None, params: dict = None) -> object:
         pass
+
+
 

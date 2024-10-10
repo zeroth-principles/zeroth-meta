@@ -24,3 +24,16 @@ __email__ = 'engineering@zeroth-principles.com'
 __authors__ = []
 
 """ * """
+
+class Chain:
+    def __init__(self, funcs=None) -> None:
+        self.funcs = funcs
+
+    def __call__(self, operand=None, params: dict = None) -> object:
+        result = operand
+        # reverse traverse the funcs
+        for func, param in reversed(zip(self.funcs, params)):
+            result = func(result, param)
+
+        return result
+
